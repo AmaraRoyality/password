@@ -83,7 +83,7 @@ body {
     background-color: #e68900;
 }
 
-/* Responsiveness */
+
 @media (max-width: 768px) {
     .container {
         padding: 2rem;
