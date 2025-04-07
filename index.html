@@ -1,41 +1,245 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="./script.js" defer></script>
-    <link rel="stylesheet" href="./style.css">
-    <title>Password Generator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Generator</title>
+  <style>
+    :root {
+      --bg: #1e1e2f;
+      --container-bg: #2e2e3e;
+      --text: #fff;
+      --input-bg: #111;
+      --input-color: #000;
+      --button-bg: #161616;
+      --button-hover: #0056b3;
+      --history-bg: #444;
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f4f4;
+      --container-bg: #fff;
+      --text: #000;
+      --input-bg: #ddd;
+      --input-color: #000;
+      --button-bg: #007BFF;
+      --button-hover: #0056b3;
+      --history-bg: #eee;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      background-color: var(--container-bg);
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .form label {
+      display: block;
+      margin-top: 1rem;
+    }
+    .form input[type="range"], .form input[type="number"] {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .form input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+    .form button, #copy {
+      margin-top: 1.5rem;
+      padding: 0.7rem;
+      background-color: var(--button-bg);
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .form button:hover, #copy:hover {
+      background-color: var(--button-hover);
+    }
+    .output {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    #password {
+      font-size: 1.2rem;
+      padding: 0.5rem;
+      width: 100%;
+      margin-top: 0.5rem;
+      border-radius: 5px;
+      border: none;
+      background-color: var(--input-bg);
+      color: var(--input-color);
+    }
+    .strength {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+    .history {
+      margin-top: 1.5rem;
+    }
+    .history ul {
+      list-style: none;
+      padding: 0;
+    }
+    .history li {
+      background: var(--history-bg);
+      padding: 0.5rem;
+      border-radius: 5px;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      word-break: break-all;
+    }
+    .theme-toggle {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .theme-toggle button {
+      background: none;
+      border: 1px solid var(--text);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .theme-toggle button:hover {
+      opacity: 0.8;
+    }
+    @media (max-width: 500px) {
+      .container {
+        padding: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="title">Password Generator</h1>
-        
-        <form class="form">
-            <label for="characterAmountRange">Number of Characters</label>
-            <div>
-                <input type="range" min="1" max="20" value="10" id="characterAmountRange">
-                <input type="number" min="1" max="20" value="10" id="characterAmountNumber">
-            </div>
-            
-            <label for="includeUppercase">Include Uppercase</label>
-            <input type="checkbox" id="includeUppercase">
-            
-            <label for="includeNumbers">Include Numbers</label>
-            <input type="checkbox" id="includeNumbers">
-            
-            <label for="includeSymbols">Include Symbols</label>
-            <input type="checkbox" id="includeSymbols">
-            
-            <button type="submit">Generate Password</button>
-        </form>
-
-        <div class="password-container">
-            <h3>Generated Password:</h3>
-            <input type="text" id="password" readonly>
-            <button id="showHideButton">Show</button>
-            <button id="copyButton">Copy Password</button>
-        </div>
+  <div class="container">
+    <div class="theme-toggle">
+      <button id="toggleTheme">Toggle Theme</button>
     </div>
+    <h1>Password Generator</h1>
+    <div class="form">
+      <label>Length: <span id="lengthValue">16</span></label>
+      <input type="range" id="length" min="8" max="12" value="16">
+      <label><input type="checkbox" id="uppercase" checked> Include Uppercase</label>
+      <label><input type="checkbox" id="numbers" checked> Include Numbers</label>
+      <label><input type="checkbox" id="symbols" checked> Include Symbols</label>
+      <button id="generate">Generate Password</button>
+    </div>
+    <div class="output">
+      <input type="text" id="password" readonly>
+      <div class="strength" id="strength">Strength: </div>
+      <button id="copy">Copy to Clipboard</button>
+    </div>
+    <div class="history">
+      <h3>History</h3>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+  <script>
+    const lengthInput = document.getElementById('length');
+    const lengthValue = document.getElementById('lengthValue');
+    const uppercase = document.getElementById('uppercase');
+    const numbers = document.getElementById('numbers');
+    const symbols = document.getElementById('symbols');
+    const generateBtn = document.getElementById('generate');
+    const passwordEl = document.getElementById('password');
+    const copyBtn = document.getElementById('copy');
+    const strengthText = document.getElementById('strength');
+    const historyList = document.getElementById('historyList');
+    const toggleThemeBtn = document.getElementById('toggleTheme');
+
+    const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+    const NUM = '0123456789';
+    const SYM = '!@#$%^&*()_+[]{}|;:,.<>?';
+
+    lengthInput.addEventListener('input', () => {
+      lengthValue.textContent = lengthInput.value;
+    });
+
+    function getRandom(str) {
+      return str[Math.floor(Math.random() * str.length)];
+    }
+
+    function shuffle(str) {
+      return str.split('').sort(() => 0.5 - Math.random()).join('');
+    }
+
+    function evaluateStrength(password) {
+      let score = 0;
+      if (password.length >= 12) score++;
+      if (/[A-Z]/.test(password)) score++;
+      if (/[0-9]/.test(password)) score++;
+      if (/[^A-Za-z0-9]/.test(password)) score++;
+      return ['Very Weak', 'Weak', 'Moderate', 'Strong', 'Very Strong'][score];
+    }
+
+    generateBtn.addEventListener('click', () => {
+      let chars = LOWER;
+      let mustInclude = [getRandom(LOWER)];
+      if (uppercase.checked) {
+        chars += UPPER;
+        mustInclude.push(getRandom(UPPER));
+      }
+      if (numbers.checked) {
+        chars += NUM;
+        mustInclude.push(getRandom(NUM));
+      }
+      if (symbols.checked) {
+        chars += SYM;
+        mustInclude.push(getRandom(SYM));
+      }
+      let password = mustInclude;
+      while (password.length < parseInt(lengthInput.value)) {
+        password.push(getRandom(chars));
+      }
+      password = shuffle(password.join(''));
+      passwordEl.value = password;
+      strengthText.textContent = 'Strength: ' + evaluateStrength(password);
+      addToHistory(password);
+    });
+
+    function addToHistory(password) {
+      const li = document.createElement('li');
+      li.textContent = password;
+      historyList.insertBefore(li, historyList.firstChild);
+      if (historyList.children.length > 5) {
+        historyList.removeChild(historyList.lastChild);
+      }
+    }
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(passwordEl.value).then(() => {
+        alert('Password copied to clipboard!');
+      });
+    });
+
+    toggleThemeBtn.addEventListener('click', () => {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      html.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+    });
+  </script>
 </body>
 </html>
